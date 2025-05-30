@@ -16,7 +16,7 @@ use yii\helpers\VarDumper;
 /** @var app\models\User $model */
 
 $this->title = 'Профиль пользователя';
-$this->params['breadcrumbs'][] = $this->title;
+
 
 // Получаем заявку на роль пользователя, если она есть
 $roleRequest = RoleRequest::find()
@@ -219,6 +219,39 @@ $this->registerJs("
                 }
             });
         });
+
+        // Обработчик клика по кнопке смены фото
+        $('#change-photo-btn').on('click', function() {
+            $('#photo-upload').click();
+        });
+
+        // Обработчик изменения файла
+        $('#photo-upload').on('change', function(e) {
+            if (this.files && this.files[0]) {
+                var formData = new FormData();
+                formData.append('photo', this.files[0]);
+                formData.append('" . Yii::$app->request->csrfParam . "', '" . Yii::$app->request->csrfToken . "');
+
+                $.ajax({
+                    url: '" . \yii\helpers\Url::to(['/site/update-photo']) . "',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            $('.profile__photo').attr('src', response.photoUrl);
+                            showMessage('Фото успешно обновлено', 'success');
+                        } else {
+                            showMessage(response.message || 'Ошибка при обновлении фото', 'error');
+                        }
+                    },
+                    error: function() {
+                        showMessage('Произошла ошибка при загрузке фото', 'error');
+                    }
+                });
+            }
+        });
     });
 
     function showMessage(text, type) {
@@ -257,11 +290,10 @@ $this->registerJs("
                 <!-- Левая часть с фото -->
                 <div class="card__left">
                     <div class="profile__photo-container">
-
                         <img class="profile__photo" src="<?= Yii::getAlias('@web/uploads/users/' . $model->photo) ?>"
                             alt="Фото профиля">
-
-                        <?= Html::button('Сменить фото', ['class' => 'photo__change-btn']) ?>
+                        <input type="file" id="photo-upload" style="display: none;" accept="image/*">
+                        <?= Html::button('Сменить фото', ['class' => 'photo__change-btn', 'id' => 'change-photo-btn']) ?>
                     </div>
                 </div>
 
@@ -300,7 +332,7 @@ $this->registerJs("
 
                         <!-- Рейтинг пользователя -->
                         <div class="profile__rating info__item">
-                            <div class="rating__title info__title">Рейтинг:</div>
+                            <div class="rating__title info__title">Средняя оценка:</div>
                             <div class="rating__value info__value">
                                 <?= number_format($model->getUserRating($model->id), 1) ?>
                             </div>
@@ -426,11 +458,7 @@ $this->registerJs("
                                 <div class="review">
                                     <div class="review__top">
                                         <div class="review__date">
-                                            <?= Yii::$app->formatter->asDate($review->created_at) ?>
-                                        </div>
-                                        <div class="review__rating">
-                                            <span class="stars"><?= str_repeat('★', $review->rating) ?></span>
-                                            <span class="rating-value"><?= $review->rating ?>/10</span>
+                                            <?= Yii::$app->formatter->asDate($review->created_at, 'php:d F Y') ?>
                                         </div>
                                     </div>
                                     <div class="review__value"><?= Html::encode($review->reviewDescription) ?></div>

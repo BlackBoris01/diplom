@@ -203,5 +203,4 @@ $this->registerJs("window.bookId = " . $model->id . ";");
             <?php endif; ?>
         </div>
     </div>
-
 </div>

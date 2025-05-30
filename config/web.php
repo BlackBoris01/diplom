@@ -62,6 +62,12 @@ $config = [
             ],
         ],
 
+        'formatter' => [
+            'class' => 'yii\i18n\Formatter',
+            'locale' => 'ru-RU',
+            'defaultTimeZone' => 'Europe/Moscow',
+        ],
+
     ],
     'params' => $params,
     // 'name' => '<div class="nav-bar-title">

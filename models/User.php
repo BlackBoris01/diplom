@@ -37,12 +37,14 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     public function rules()
     {
         return [
-            [['login', 'nickname', 'fullName', 'email'], 'required'],
+            [['email', 'nickname', 'password'], 'required', 'on' => 'create'],
             [['roleId'], 'integer'],
             [['login', 'nickname', 'authKey', 'fullName', 'email', 'photo'], 'string', 'max' => 255],
             [['registered'], 'safe'],
-            ['password', 'required', 'on' => 'create'],
-            ['password', 'string', 'min' => 6, 'on' => 'create'],
+            ['password', 'string', 'min' => 6],
+            ['email', 'email'],
+            ['email', 'unique', 'message' => 'Этот email уже используется'],
+            ['nickname', 'unique', 'message' => 'Этот псевдоним уже занят'],
             [['photoFile'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg', 'maxSize' => 1024 * 1024 * 2],
         ];
     }
@@ -113,11 +115,19 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
         if ($insert) {
             $this->roleId = 0;
             $this->authKey = Yii::$app->security->generateRandomString();
-            $this->passwordHash = Yii::$app->security->generatePasswordHash($this->password);
+            if (!empty($this->password)) {
+                $this->passwordHash = Yii::$app->security->generatePasswordHash($this->password);
+            }
             $this->registered = date('Y-m-d H:i:s');
-        } elseif ($this->password) {
-            // Обновляем пароль только если он был указан
-            $this->passwordHash = Yii::$app->security->generatePasswordHash($this->password);
+            // Генерируем логин из email
+            $this->login = explode('@', $this->email)[0];
+            // Устанавливаем полное имя равным псевдониму, если не указано
+            $this->fullName = $this->nickname;
+        } else {
+            // Обновляем пароль только если он был указан и не пустой
+            if (!empty($this->password)) {
+                $this->passwordHash = Yii::$app->security->generatePasswordHash($this->password);
+            }
         }
 
         // Обработка загрузки фото

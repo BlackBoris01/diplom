@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
 use yii\bootstrap5\Modal;
+use app\models\ReviewModeration;
 
 $this->title = 'Модерация отзывов';
 $this->params['breadcrumbs'][] = $this->title;
@@ -20,10 +21,16 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'review.book.title',
                 'label' => 'Книга',
+                'value' => function ($model) {
+                        return $model->review->book->title ?? 'Н/Д';
+                    }
             ],
             [
                 'attribute' => 'review.user.nickname',
                 'label' => 'Пользователь',
+                'value' => function ($model) {
+                        return $model->review->user->nickname ?? 'Аноним';
+                    }
             ],
             [
                 'attribute' => 'review.reviewDescription',
@@ -42,10 +49,37 @@ $this->params['breadcrumbs'][] = $this->title;
                         ];
                     }
             ],
-            'created_at:datetime',
+            [
+                'attribute' => 'status',
+                'label' => 'Статус',
+                'value' => function ($model) {
+                        return $model->statusLabel;
+                    },
+                'contentOptions' => function ($model) {
+                        $classes = [
+                            ReviewModeration::STATUS_PENDING => 'text-warning',
+                            ReviewModeration::STATUS_APPROVED => 'text-success',
+                            ReviewModeration::STATUS_REJECTED => 'text-danger',
+                            ReviewModeration::STATUS_REVISION => 'text-info'
+                        ];
+                        return ['class' => $classes[$model->status] ?? ''];
+                    }
+            ],
+            'createdAt:datetime',
             [
                 'class' => 'yii\grid\ActionColumn',
                 'template' => '{approve} {reject} {revision}',
+                'visibleButtons' => [
+                    'approve' => function ($model) {
+                            return $model->status === ReviewModeration::STATUS_PENDING;
+                        },
+                    'reject' => function ($model) {
+                            return $model->status === ReviewModeration::STATUS_PENDING;
+                        },
+                    'revision' => function ($model) {
+                            return $model->status === ReviewModeration::STATUS_PENDING;
+                        },
+                ],
                 'buttons' => [
                     'approve' => function ($url, $model) {
                             return Html::button('<i class="fas fa-check"></i>', [
@@ -79,12 +113,17 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 Modal::begin([
     'id' => 'modal',
-    'title' => 'Комментарий',
+    'title' => 'Комментарий модератора',
     'size' => Modal::SIZE_LARGE,
 ]);
 
 echo Html::beginForm(['#'], 'post', ['id' => 'modal-form']);
-echo Html::textarea('adminComment', '', ['class' => 'form-control', 'rows' => 5, 'required' => true]);
+echo Html::textarea('adminComment', '', [
+    'class' => 'form-control',
+    'rows' => 5,
+    'required' => true,
+    'placeholder' => 'Введите комментарий для пользователя...'
+]);
 echo Html::hiddenInput('reviewId', '', ['id' => 'review-id']);
 echo Html::hiddenInput('action', '', ['id' => 'action-type']);
 echo '<div class="mt-3">';
@@ -181,5 +220,13 @@ $this->registerJs($js);
 
     .text-success {
         color: #28a745 !important;
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+
+    .text-info {
+        color: #17a2b8 !important;
     }
 </style>

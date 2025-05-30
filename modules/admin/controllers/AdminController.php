@@ -268,7 +268,9 @@ class AdminController extends Controller
     {
         $moderation = $this->findReviewModeration($id);
         $moderation->status = ReviewModeration::STATUS_APPROVED;
+        $moderation->moderatorId = Yii::$app->user->id;
         $moderation->adminComment = Yii::$app->request->post('adminComment');
+        $moderation->updatedAt = date('Y-m-d H:i:s');
 
         if ($moderation->save()) {
             Yii::$app->session->setFlash('success', 'Отзыв одобрен');
@@ -281,7 +283,9 @@ class AdminController extends Controller
     {
         $moderation = $this->findReviewModeration($id);
         $moderation->status = ReviewModeration::STATUS_REJECTED;
+        $moderation->moderatorId = Yii::$app->user->id;
         $moderation->adminComment = Yii::$app->request->post('adminComment');
+        $moderation->updatedAt = date('Y-m-d H:i:s');
 
         if ($moderation->save()) {
             Yii::$app->session->setFlash('success', 'Отзыв отклонен');
@@ -294,7 +298,9 @@ class AdminController extends Controller
     {
         $moderation = $this->findReviewModeration($id);
         $moderation->status = ReviewModeration::STATUS_REVISION;
+        $moderation->moderatorId = Yii::$app->user->id;
         $moderation->adminComment = Yii::$app->request->post('adminComment');
+        $moderation->updatedAt = date('Y-m-d H:i:s');
 
         if ($moderation->save()) {
             Yii::$app->session->setFlash('success', 'Отзыв отправлен на доработку');

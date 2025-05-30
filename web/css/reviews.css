@@ -1,0 +1,148 @@
+/* Стили для отзывов */
+.review-card {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.review-card-green,
+.review-positive {
+    background-color: #eaf7ec;
+    border: 1px solid #d4edda;
+}
+
+.review-card-red,
+.review-negative {
+    background-color: #fdeaea;
+    border: 1px solid #f8d7da;
+}
+
+.review-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.review-card-author {
+    font-weight: 500;
+    color: #333;
+}
+
+.review-card-date {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.review-card-text {
+    color: #333;
+    line-height: 1.5;
+}
+
+/* Форма отзыва */
+.review-form {
+    margin-bottom: 36px;
+    margin-top: 8px;
+}
+
+.review-form-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.review-form-label {
+    font-size: 1.08rem;
+    font-weight: 500;
+}
+
+.review-form-textarea {
+    width: 100%;
+    min-height: 70px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    padding: 14px 16px;
+    font-size: 1.08rem;
+    resize: vertical;
+    outline: none;
+    transition: border 0.2s;
+    font-family: inherit;
+}
+
+.review-form-textarea:focus {
+    border: 1.5px solid #FFB800;
+}
+
+.review-form-submit {
+    background: #FFB800;
+    color: #222;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 28px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.review-form-submit:hover {
+    background: #d1a106;
+    color: #fff;
+}
+
+.review-toggle {
+    font-size: 16px;
+    color: #007bff;
+    text-decoration: none;
+    margin-bottom: 20px;
+    display: inline-block;
+}
+
+.review-toggle:hover {
+    text-decoration: underline;
+}
+
+.review-form-container {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.no-reviews-message {
+    text-align: center;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    color: #6c757d;
+    font-size: 1.1em;
+    margin: 20px 0;
+}
+
+/* Медиа-запросы */
+@media (max-width: 768px) {
+    .review-form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .review-form-textarea {
+        padding: 10px;
+    }
+    
+    .review-card {
+        padding: 15px;
+    }
+    
+    .review-card-header {
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
+    }
+} 

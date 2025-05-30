@@ -12,6 +12,7 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\RoleRequest;
+use app\models\User;
 
 class SiteController extends Controller
 {
@@ -74,6 +75,7 @@ class SiteController extends Controller
      */
     public function actionLogin()
     {
+        $this->layout = 'auth';
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
         }
@@ -122,20 +124,28 @@ class SiteController extends Controller
 
     public function actionRegister()
     {
+        $this->layout = 'auth';
         $model = new \app\models\User();
+        $model->scenario = 'create';
 
         if ($model->load(Yii::$app->request->post())) {
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
                 return ActiveForm::validate($model);
             }
+
             if ($model->save()) {
                 if (Yii::$app->user->login($model)) {
                     Yii::$app->session->setFlash('success', 'Пользователь успешно зарегистрирован');
                     return $this->redirect(['/']);
                 }
             } else {
-                VarDumper::dump($model, $depth = 10, $highlight = true);
+                // Добавляем ошибки в сессию для отображения пользователю
+                foreach ($model->getErrors() as $attribute => $errors) {
+                    foreach ($errors as $error) {
+                        Yii::$app->session->addFlash('error', $error);
+                    }
+                }
             }
         }
 
@@ -194,6 +204,61 @@ class SiteController extends Controller
         }
 
         return ['success' => false, 'message' => 'Ошибка при сохранении заявки'];
+    }
+
+    public function actionUpdatePhoto()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (Yii::$app->user->isGuest) {
+            return ['success' => false, 'message' => 'Необходимо авторизоваться'];
+        }
+
+        $user = User::findOne(Yii::$app->user->id);
+        if (!$user) {
+            return ['success' => false, 'message' => 'Пользователь не найден'];
+        }
+
+        $photo = \yii\web\UploadedFile::getInstanceByName('photo');
+        if (!$photo) {
+            return ['success' => false, 'message' => 'Файл не загружен'];
+        }
+
+        // Проверяем тип файла
+        if (!in_array($photo->type, ['image/jpeg', 'image/png', 'image/gif'])) {
+            return ['success' => false, 'message' => 'Допустимые форматы: JPG, PNG, GIF'];
+        }
+
+        // Проверяем размер файла (максимум 5MB)
+        if ($photo->size > 5 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'Максимальный размер файла: 5MB'];
+        }
+
+        // Генерируем уникальное имя файла
+        $fileName = uniqid('user_') . '.' . $photo->extension;
+        $filePath = Yii::getAlias('@webroot/uploads/users/') . $fileName;
+
+        // Создаем директорию, если её нет
+        if (!is_dir(Yii::getAlias('@webroot/uploads/users/'))) {
+            mkdir(Yii::getAlias('@webroot/uploads/users/'), 0777, true);
+        }
+
+        // Удаляем старое фото, если оно существует
+        if ($user->photo && file_exists(Yii::getAlias('@webroot/uploads/users/') . $user->photo)) {
+            unlink(Yii::getAlias('@webroot/uploads/users/') . $user->photo);
+        }
+
+        if ($photo->saveAs($filePath)) {
+            $user->photo = $fileName;
+            if ($user->save()) {
+                return [
+                    'success' => true,
+                    'photoUrl' => Yii::getAlias('@web/uploads/users/') . $fileName
+                ];
+            }
+        }
+
+        return ['success' => false, 'message' => 'Ошибка при сохранении файла'];
     }
 
 }

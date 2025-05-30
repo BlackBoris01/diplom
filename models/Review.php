@@ -96,11 +96,10 @@ class Review extends ActiveRecord
         parent::afterSave($insert, $changedAttributes);
 
         if ($insert) {
-            // Создаем запись модерации после сохранения отзыва
-            $moderation = new ReviewModeration([
-                'reviewId' => $this->id,
-                'status' => ReviewModeration::STATUS_PENDING
-            ]);
+            // Создаем запись в таблице модерации при создании нового отзыва
+            $moderation = new ReviewModeration();
+            $moderation->reviewId = $this->id;
+            $moderation->status = ReviewModeration::STATUS_PENDING;
             $moderation->save();
         }
     }

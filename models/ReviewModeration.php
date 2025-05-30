@@ -10,17 +10,21 @@ use yii\db\ActiveRecord;
  *
  * @property int $id
  * @property int $reviewId
- * @property int $moderatorId
+ * @property int|null $moderatorId
  * @property string $status
- * @property string|null $comment
+ * @property string|null $adminComment
  * @property string $createdAt
- * @property string $updatedAt
+ * @property string|null $updatedAt
+ *
+ * @property User $moderator
+ * @property Review $review
  */
 class ReviewModeration extends ActiveRecord
 {
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
+    const STATUS_REVISION = 'revision';
 
     /**
      * {@inheritdoc}
@@ -36,12 +40,24 @@ class ReviewModeration extends ActiveRecord
     public function rules()
     {
         return [
-            [['reviewId', 'moderatorId', 'status'], 'required'],
+            [['reviewId'], 'required'],
             [['reviewId', 'moderatorId'], 'integer'],
-            [['status'], 'string'],
-            [['comment'], 'string'],
+            [['adminComment'], 'string'],
             [['createdAt', 'updatedAt'], 'safe'],
-            [['status'], 'in', 'range' => [self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_REJECTED]],
+            [['status'], 'string', 'max' => 20],
+            [['status'], 'default', 'value' => self::STATUS_PENDING],
+            [
+                ['status'],
+                'in',
+                'range' => [
+                    self::STATUS_PENDING,
+                    self::STATUS_APPROVED,
+                    self::STATUS_REJECTED,
+                    self::STATUS_REVISION
+                ]
+            ],
+            [['moderatorId'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['moderatorId' => 'id']],
+            [['reviewId'], 'exist', 'skipOnError' => true, 'targetClass' => Review::class, 'targetAttribute' => ['reviewId' => 'id']],
         ];
     }
 
@@ -52,17 +68,29 @@ class ReviewModeration extends ActiveRecord
     {
         return [
             'id' => 'ID',
-            'reviewId' => 'ID отзыва',
-            'moderatorId' => 'ID модератора',
+            'reviewId' => 'Отзыв',
+            'moderatorId' => 'Модератор',
             'status' => 'Статус',
-            'comment' => 'Комментарий',
+            'adminComment' => 'Комментарий',
             'createdAt' => 'Дата создания',
             'updatedAt' => 'Дата обновления',
         ];
     }
 
     /**
+     * Gets query for [[Moderator]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getModerator()
+    {
+        return $this->hasOne(User::class, ['id' => 'moderatorId']);
+    }
+
+    /**
      * Gets query for [[Review]].
+     *
+     * @return \yii\db\ActiveQuery
      */
     public function getReview()
     {
@@ -70,11 +98,20 @@ class ReviewModeration extends ActiveRecord
     }
 
     /**
-     * Gets query for [[Moderator]].
+     * Gets status label
+     *
+     * @return string
      */
-    public function getModerator()
+    public function getStatusLabel()
     {
-        return $this->hasOne(User::class, ['id' => 'moderatorId']);
+        $labels = [
+            self::STATUS_PENDING => 'На проверке',
+            self::STATUS_APPROVED => 'Одобрен',
+            self::STATUS_REJECTED => 'Отклонен',
+            self::STATUS_REVISION => 'На доработке'
+        ];
+
+        return $labels[$this->status] ?? 'Неизвестно';
     }
 
     /**

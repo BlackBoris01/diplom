@@ -327,4 +327,15 @@ class CatalogController extends Controller
             ->andWhere(['rm.status' => ReviewModeration::STATUS_APPROVED])
             ->count();
     }
+
+    public function init()
+    {
+        parent::init();
+
+        // Создаем директорию для изображений каталога, если она не существует
+        $uploadPath = Yii::getAlias('@webroot/uploads/catalog');
+        if (!file_exists($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+    }
 }
